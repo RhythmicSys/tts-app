@@ -1,0 +1,42 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Speech Settings">
+
+        <ListPreference
+            app:key="selected_language_locale"
+            app:title="Default Language"
+            app:summary="Select the default TTS language"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:key="selected_voice_id"
+            app:title="Default Voice"
+            app:summary="Select the default TTS voice (based on language)"
+            app:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.SeekBarPreference
+            app:key="speech_pitch"
+            app:title="Speech Pitch"
+            app:summary="Adjust the default pitch"
+            app:defaultValue="100" />
+
+        <SeekBarPreference
+            app:key="speech_speed"
+            app:title="Speech Speed"
+            app:summary="Adjust the default speed"
+            app:defaultValue="100"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Appearance">
+
+        <SwitchPreferenceCompat
+            app:key="dark_mode_enabled"
+            app:title="Dark Mode"
+            app:summaryOn="Dark mode is active"
+            app:summaryOff="Light mode is active"
+            app:defaultValue="true" /> <!-- Or true, or based on system default -->
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
