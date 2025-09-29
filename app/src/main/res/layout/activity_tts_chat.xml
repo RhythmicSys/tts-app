@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context=".TtsChatActivity">
+    tools:context=".MainActivity">
 
     <!-- Toolbar at the top -->
     <com.google.android.material.appbar.AppBarLayout
@@ -41,7 +41,7 @@
 
     <!-- RecyclerView for messages, constrained below Toolbar and above input area -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/chatRecyclerView"
+        android:id="@+id/chat_recycler_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
