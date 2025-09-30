@@ -4,7 +4,7 @@
     <application
         android:allowBackup="true"
         android:label="Console TTS"
-        android:theme="@style/Theme.AppCompat.DayNight">
+        android:theme="@style/Theme.AppCompat.DayNight.NoActionBar">
         <activity android:name=".SettingsActivity"
             android:exported="true">
             <intent-filter>

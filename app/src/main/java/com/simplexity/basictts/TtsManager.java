@@ -3,17 +3,20 @@ package com.simplexity.basictts;
 import android.content.Context;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
+import android.util.Log;
+
+import java.util.Set;
 
 public class TtsManager {
 
-    private final TextToSpeech textToSpeech;
-    private Voice defaultVoice;
+    private TextToSpeech textToSpeech;
+    private String defaultVoice;
     private float defaultPitch;
     private float defaultSpeed;
     private boolean isInitialized;
 
 
-    public TtsManager(Voice defaultVoice, float defaultPitch, float defaultSpeed,
+    public TtsManager(String defaultVoice, float defaultPitch, float defaultSpeed,
                       Context context) {
         this.defaultVoice = defaultVoice;
         this.defaultPitch = defaultPitch;
@@ -21,11 +24,12 @@ public class TtsManager {
         textToSpeech = new TextToSpeech(context, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 isInitialized = true;
+                Voice voice = getVoiceFromString(defaultVoice);
+                textToSpeech.setPitch(defaultPitch);
+                textToSpeech.setSpeechRate(defaultSpeed);
+                if (voice != null) textToSpeech.setVoice(voice);
             }
         });
-        textToSpeech.setPitch(defaultPitch);
-        textToSpeech.setSpeechRate(defaultSpeed);
-        textToSpeech.setVoice(defaultVoice);
     }
 
     public TtsManager(Context context) {
@@ -38,11 +42,11 @@ public class TtsManager {
     }
 
 
-    public Voice getDefaultVoice() {
+    public String getDefaultVoice() {
         return defaultVoice;
     }
 
-    public void setDefaultVoice(Voice defaultVoice) {
+    public void setDefaultVoice(String defaultVoice) {
         this.defaultVoice = defaultVoice;
     }
 
@@ -79,6 +83,29 @@ public class TtsManager {
 
     public TextToSpeech getTextToSpeech() {
         return textToSpeech;
+    }
+
+    private Voice getVoiceFromString(String string) {
+        if (textToSpeech == null) {
+            Log.d("TtsManager", "TextToSpeech is null");
+            return null;
+        }
+        if (string == null) {
+            Log.d("TtsManager", "String is null");
+            return null;
+        }
+        Set<Voice> voices = textToSpeech.getVoices();
+        if (voices == null) {
+            Log.d("TtsManager", "Voices are null");
+            return null;
+        }
+        for (Voice voice : textToSpeech.getVoices()) {
+            if (voice.getName().equals(string)) {
+                Log.d("TtsManager", "Voice found: " + voice.getName());
+                return voice;
+            }
+        }
+        return null;
     }
 
     public void shutdown() {

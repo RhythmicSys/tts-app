@@ -1,6 +1,7 @@
 package com.simplexity.basictts;
 
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.speech.tts.Voice;
 import android.util.Log;
 import android.widget.Button;
@@ -18,62 +19,151 @@ import java.util.Set;
 
 public class PreferenceHandler extends PreferenceFragmentCompat {
 
-    private TtsManager ttsManager;
-    private ListPreference languageOptions, voiceOptions, networkOptions;
-    private SeekBarPreference speechPitch, speechSpeed;
+    private TextToSpeech textToSpeech;
+    private ListPreference languagePreference, voicePreference, networkPreference;
+    private SeekBarPreference pitchPreference, speedPreference;
     private float defaultPitch, defaultSpeed;
     private Voice defaultVoice;
     private Button testButton;
     private SwitchPreferenceCompat darkMode;
     private final HashMap<String, Set<VoiceInfo>> languageVoices = new HashMap<>();
+    private final HashMap<String, Locale> localeOptions = new HashMap<>();
 
     @Override
     public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey);
-        ttsManager = new TtsManager(getContext());
+        textToSpeech = new TextToSpeech(getContext(), onTtsInitialized());
 
-        languageOptions = findPreference("selected_language_locale");
-        voiceOptions = findPreference("selected_voice_id");
-        networkOptions = findPreference("network_options");
+        languagePreference = findPreference("selected_language_locale");
+        voicePreference = findPreference("selected_voice_id");
+        networkPreference = findPreference("network_options");
         darkMode = findPreference("dark_mode_enabled");
-        speechPitch = findPreference("speech_pitch");
-        speechSpeed = findPreference("speech_speed");
+        pitchPreference = findPreference("speech_pitch");
+        speedPreference = findPreference("speech_speed");
 
-        if (voiceOptions != null) {
-            voiceOptions.setEnabled(false);
+        if (voicePreference != null) {
+            voicePreference.setEnabled(true);
+            setSummary(voicePreference);
         }
-        if (languageOptions != null) {
-            languageOptions.setEnabled(false);
+        if (languagePreference != null) {
+            languagePreference.setEnabled(true);
+            setSummary(languagePreference);
         }
-        if (networkOptions != null) {
-            networkOptions.setEnabled(false);
+        if (networkPreference != null) {
+            networkPreference.setEnabled(false);
+            setSummary(networkPreference);
         }
-        loadAllVoices();
         setupListeners();
 
 
     }
 
     private void setupListeners() {
-        if (languageOptions != null) {
-            languageOptions.setOnPreferenceChangeListener((preference, newValue) -> {
+        if (languagePreference != null) {
+            languagePreference.setOnPreferenceChangeListener((preference, newValue) -> {
                 Log.d("PreferenceHandler", "Language changed to: " + newValue);
                 if (newValue != null) {
-                    populateLanguageVoices(new Locale(newValue.toString()));
+                    Locale selected = Locale.forLanguageTag(newValue.toString());
+                    populateLanguageVoices(selected);
+                    setSummary(languagePreference);
                 }
                 return true;
             });
         }
+        if (voicePreference != null) {
+            voicePreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                setSummary(voicePreference);
+                Log.d("PreferenceHandler", "Voice changed to: " + newValue);
+                return true;
+            });
+        }
+        if (networkPreference != null) {
+            networkPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                setSummary(networkPreference);
+                Log.d("PreferenceHandler", "Network changed to: " + newValue);
+                return true;
+            });
+        }
+        if (darkMode != null) {
+            darkMode.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d("PreferenceHandler", "Dark mode changed to: " + newValue);
+                return true;
+            });
+        }
+        if (pitchPreference != null) {
+            pitchPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d("PreferenceHandler", "Pitch changed to: " + newValue);
+                return true;
+            });
+        }
+        if (speedPreference != null) {
+            speedPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                Log.d("PreferenceHandler", "Speed changed to: " + newValue);
+                return true;
+            });
+        }
+
     }
 
     private void loadAllVoices() {
-        Set<Voice> systemVoices = ttsManager.getTextToSpeech().getVoices();
-        for (Voice voice : systemVoices) {
+        if (textToSpeech == null) {
+            Log.d("PreferenceHandler", "TextToSpeech is null");
+            return;
+        }
+        Log.d("PreferenceHandler", "Loading all voices");
+
+        for (Voice voice : textToSpeech.getVoices()) {
+            if (voice == null) {
+                Log.d("PreferenceHandler", "Voice is null");
+                continue;
+            }
             Locale locale = voice.getLocale();
+            if (locale == null) {
+                Log.d("PreferenceHandler", "Locale is null");
+                continue;
+            }
+            Log.d("PreferenceHandler", "Locale: " + locale);
             VoiceInfo voiceInfo = new VoiceInfo(voice.getName(), voice.getName(), locale,
                     voice.isNetworkConnectionRequired());
-            languageVoices.getOrDefault(locale.toString(), new HashSet<>()).add(voiceInfo);
+            Log.d("PreferenceHandler", "Voice: " + voiceInfo);
+            Set<VoiceInfo> currentVoices;
+            if (languageVoices.containsKey(locale.toLanguageTag())) {
+                currentVoices = languageVoices.get(locale.toLanguageTag());
+            } else {
+                currentVoices = new HashSet<>();
+            }
+            currentVoices.add(voiceInfo);
+            languageVoices.put(locale.toLanguageTag(), currentVoices);
         }
+        Log.d("PreferenceHandler", "All voices loaded");
+        Log.d("PreferenceHandler", "Language voices: " + languageVoices);
+    }
+
+    private void populateLocaleList() {
+        if (textToSpeech == null) {
+            Log.d("PreferenceHandler", "TextToSpeech is null");
+            return;
+        }
+        Log.d("PreferenceHandler", "Populating locale list");
+        Set<Locale> locales = textToSpeech.getAvailableLanguages();
+        if (locales == null) {
+            Log.d("PreferenceHandler", "No locales found");
+            return;
+        }
+        Log.d("PreferenceHandler", "Locales found: " + locales);
+        languagePreference.setEntries(locales.stream().map(Locale::getDisplayName).toArray(String[]::new));
+        languagePreference.setEntryValues(locales.stream().map(Locale::toLanguageTag).toArray(String[]::new));
+        languagePreference.setEnabled(true);
+        if (languagePreference.getValue() != null) {
+            Locale selected = Locale.forLanguageTag(languagePreference.getValue());
+            populateLanguageVoices(selected);
+        } else {
+            languagePreference.setValue(Locale.getDefault().toLanguageTag());
+            populateLanguageVoices(Locale.getDefault());
+        }
+        Log.d("PreferenceHandler", "Locale list populated");
+
+
     }
 
 
@@ -82,16 +172,42 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
             Log.d("PreferenceHandler", "Locale is null");
             return;
         }
-        Log.d("PreferenceHandler", "Locale: " + locale.toString());
-        Set<VoiceInfo> voices = languageVoices.get(locale.toString());
+        Log.d("PreferenceHandler", "Locale: " + locale);
+        Set<VoiceInfo> voices = languageVoices.get(locale.toLanguageTag());
+        Log.d("PreferenceHandler", "Voices: " + voices);
+        Log.d("PreferenceHandler", "Voice preference: " + voicePreference);
+        Log.d("PreferenceHandler", "Language Voices: " + languageVoices);
         if (voices == null) {
-            Log.d("PreferenceHandler", "No voices found for locale: " + locale.toString());
+            Log.d("PreferenceHandler", "No voices found for locale: " + locale);
             return;
         }
-        Log.d("PreferenceHandler", "Voices found: " + voices.toString());
-        voiceOptions.setEntries(voices.stream().map(VoiceInfo::getHumanReadableName).toArray(String[]::new));
-        voiceOptions.setEntryValues(voices.stream().map(VoiceInfo::getVoiceId).toArray(String[]::new));
-        voiceOptions.setEnabled(true);
+        Log.d("PreferenceHandler", "Voices found: " + voices);
+        voicePreference.setEntries(voices.stream().map(VoiceInfo::getHumanReadableName).toArray(String[]::new));
+        voicePreference.setEntryValues(voices.stream().map(VoiceInfo::getVoiceId).toArray(String[]::new));
+        voicePreference.setEnabled(true);
+
+
+
+    }
+
+    private TextToSpeech.OnInitListener onTtsInitialized() {
+        return (status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                loadAllVoices();
+                populateLocaleList();
+                Log.d("PreferenceHandler", "TextToSpeech initialization successful");
+            } else {
+                Log.d("PreferenceHandler", "TextToSpeech initialization failed");
+            }
+        });
+
+    }
+
+    private void setSummary(ListPreference preference){
+        int index = preference.findIndexOfValue(preference.getValue());
+        if (index >= 0) {
+            preference.setSummary(preference.getEntries()[index]);
+        }
     }
 
 

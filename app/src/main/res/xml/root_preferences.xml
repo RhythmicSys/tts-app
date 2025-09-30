@@ -5,15 +5,15 @@
 
         <ListPreference
             app:key="selected_language_locale"
-            app:title="Default Language"
-            app:summary="Select the default TTS language"
-            app:useSimpleSummaryProvider="true" />
+            app:title="Default Language"/>
+
+        <ListPreference
+            app:key="network_options"
+            app:title="Network Options"/>
 
         <ListPreference
             app:key="selected_voice_id"
-            app:title="Default Voice"
-            app:summary="Select the default TTS voice (based on language)"
-            app:useSimpleSummaryProvider="true" />
+            app:title="Default Voice"/>
 
         <androidx.preference.SeekBarPreference
             android:max="200"
