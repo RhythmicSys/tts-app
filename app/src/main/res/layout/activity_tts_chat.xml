@@ -26,14 +26,16 @@
             <!-- Add your settings ImageButton here if it's part of the Toolbar -->
             <ImageButton
                 android:id="@+id/settings_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="end"
                 android:layout_marginEnd="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="settings button"
-                android:src="@android:drawable/ic_menu_manage"
-                app:tint="@android:color/white" />
+                android:scaleX="1.5"
+                android:scaleY="1.5"
+                android:src="@drawable/round_settings_24"
+                app:tint="@color/material_dynamic_neutral_variant30" />
         </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -68,23 +70,27 @@
 
         <EditText
             android:id="@+id/edit_tts_message"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="327dp"
+            android:layout_height="58dp"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
+            android:background="?attr/editTextBackground"
             android:hint="Type a message"
+            android:imeOptions="actionSend"
             android:importantForAutofill="no"
             android:inputType="textShortMessage|textMultiLine|textCapSentences"
-            android:imeOptions="actionSend"
             android:maxLines="5"
-            android:background="?attr/editTextBackground"
-            android:padding="12dp"
-            android:layout_marginEnd="8dp"/>
+            android:padding="12dp" />
 
-        <Button
+        <ImageButton
             android:id="@+id/tts_send_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Send" />
+            android:layout_width="78dp"
+            android:layout_height="56dp"
+            android:backgroundTint="@android:color/holo_blue_light"
+            android:contentDescription="Send Message"
+            android:src="@drawable/send_icon"
+            app:tint="@color/material_dynamic_neutral10"
+             />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

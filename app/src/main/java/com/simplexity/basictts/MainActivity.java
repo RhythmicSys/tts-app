@@ -20,12 +20,9 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
-    private Log logger;
-
     private RecyclerView recyclerView;
     private EditText textBox;
-    private Button sendButton;
-    private ImageButton settingsButton;
+    private ImageButton settingsButton, sendButton;
     private MessageAdapter messageAdapter;
     private TtsManager ttsManager;
     private SharedPreferences sharedPreferences;
@@ -118,6 +115,9 @@ public class MainActivity extends Activity {
 
 
     private void sendMessage() {
+        if (textBox.getText().toString().trim().isEmpty()) {
+            return;
+        }
         ttsManager.sendMessage(textBox.getText().toString().trim());
         messages.add(textBox.getText().toString().trim());
         messageAdapter.notifyItemInserted(messages.size() - 1);
