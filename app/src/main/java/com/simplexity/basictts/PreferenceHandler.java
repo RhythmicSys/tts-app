@@ -7,13 +7,18 @@ import android.util.Log;
 import android.widget.Button;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.ListPreference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SeekBarPreference;
 import androidx.preference.SwitchPreferenceCompat;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -43,15 +48,12 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
 
         if (voicePreference != null) {
             voicePreference.setEnabled(true);
-            setSummary(voicePreference);
         }
         if (languagePreference != null) {
             languagePreference.setEnabled(true);
-            setSummary(languagePreference);
         }
         if (networkPreference != null) {
             networkPreference.setEnabled(false);
-            setSummary(networkPreference);
         }
         setupListeners();
 
@@ -65,27 +67,30 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
                 if (newValue != null) {
                     Locale selected = Locale.forLanguageTag(newValue.toString());
                     populateLanguageVoices(selected);
-                    setSummary(languagePreference);
+                    voicePreference.setValue(voicePreference.getEntries()[0].toString());
                 }
                 return true;
             });
         }
         if (voicePreference != null) {
             voicePreference.setOnPreferenceChangeListener((preference, newValue) -> {
-                setSummary(voicePreference);
                 Log.d("PreferenceHandler", "Voice changed to: " + newValue);
                 return true;
             });
         }
         if (networkPreference != null) {
             networkPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-                setSummary(networkPreference);
                 Log.d("PreferenceHandler", "Network changed to: " + newValue);
                 return true;
             });
         }
         if (darkMode != null) {
             darkMode.setOnPreferenceChangeListener((preference, newValue) -> {
+                if (darkMode.isChecked()) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                }
                 Log.d("PreferenceHandler", "Dark mode changed to: " + newValue);
                 return true;
             });
@@ -151,19 +156,29 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
             return;
         }
         Log.d("PreferenceHandler", "Locales found: " + locales);
-        languagePreference.setEntries(locales.stream().map(Locale::getDisplayName).toArray(String[]::new));
-        languagePreference.setEntryValues(locales.stream().map(Locale::toLanguageTag).toArray(String[]::new));
+        List<Locale> sortedLocales = new ArrayList<>(locales);
+        sortedLocales.sort(Comparator.comparing(Locale::getDisplayName));
+
+        String[] entries = sortedLocales.stream()
+                .map(Locale::getDisplayName)
+                .toArray(String[]::new);
+
+        String[] entryValues = sortedLocales.stream()
+                .map(Locale::toLanguageTag)
+                .toArray(String[]::new);
+
+        languagePreference.setEntries(entries);
+        languagePreference.setEntryValues(entryValues);
         languagePreference.setEnabled(true);
-        if (languagePreference.getValue() != null) {
-            Locale selected = Locale.forLanguageTag(languagePreference.getValue());
-            populateLanguageVoices(selected);
-        } else {
-            languagePreference.setValue(Locale.getDefault().toLanguageTag());
-            populateLanguageVoices(Locale.getDefault());
+        String currentValue = languagePreference.getValue();
+        if (currentValue == null || !Arrays.asList(entryValues).contains(currentValue)) {
+            String fallback = Locale.getDefault().toLanguageTag();
+            languagePreference.setValue(fallback);
+            currentValue = fallback;
         }
+        Log.d("PreferenceHandler", "Current value: " + currentValue);
+        populateLanguageVoices(Locale.forLanguageTag(currentValue));
         Log.d("PreferenceHandler", "Locale list populated");
-
-
     }
 
 
@@ -182,13 +197,28 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
             return;
         }
         Log.d("PreferenceHandler", "Voices found: " + voices);
-        voicePreference.setEntries(voices.stream().map(VoiceInfo::getHumanReadableName).toArray(String[]::new));
-        voicePreference.setEntryValues(voices.stream().map(VoiceInfo::getVoiceId).toArray(String[]::new));
+        List<VoiceInfo> sortedVoices = new ArrayList<>(voices);
+        sortedVoices.sort(Comparator.comparing(VoiceInfo::getHumanReadableName, String.CASE_INSENSITIVE_ORDER));
+
+        String[] entries = sortedVoices.stream()
+                .map(VoiceInfo::getHumanReadableName)
+                .toArray(String[]::new);
+
+        String[] entryValues = sortedVoices.stream()
+                .map(VoiceInfo::getVoiceId)
+                .toArray(String[]::new);
+
+        voicePreference.setEntryValues(entryValues);
+        voicePreference.setEntries(entries);
+        String currentValue = voicePreference.getValue();
+        if (currentValue == null || !Arrays.asList(entryValues).contains(currentValue)) {
+            String fallback = entryValues[0];
+            voicePreference.setValue(fallback);
+        }
         voicePreference.setEnabled(true);
 
-
-
     }
+
 
     private TextToSpeech.OnInitListener onTtsInitialized() {
         return (status -> {
@@ -202,13 +232,5 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
         });
 
     }
-
-    private void setSummary(ListPreference preference){
-        int index = preference.findIndexOfValue(preference.getValue());
-        if (index >= 0) {
-            preference.setSummary(preference.getEntries()[index]);
-        }
-    }
-
 
 }

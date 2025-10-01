@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -39,6 +40,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_tts_chat);
         setupScreenStuff();
         loadTtsManagerFromPreferences();
+        loadStyleFromPreferences();
         setupPreferenceListener();
     }
 
@@ -77,7 +79,11 @@ public class MainActivity extends Activity {
                     key.equals("speech_speed")) {
                 loadTtsManagerFromPreferences();
             }
+            if (key.equals("dark_mode_enabled")) {
+                loadStyleFromPreferences();
+            }
         };
+
         sharedPreferences.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
     }
 
@@ -96,6 +102,16 @@ public class MainActivity extends Activity {
             ttsManager = new TtsManager(voiceId, pitch, speed, this);
         } else {
             ttsManager = new TtsManager(this);
+        }
+    }
+
+    private void loadStyleFromPreferences() {
+        Log.d("MainActivity", "Loading style from preferences");
+        boolean lightMode = sharedPreferences.getBoolean("dark_mode_enabled", true);
+        if (lightMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         }
 
     }

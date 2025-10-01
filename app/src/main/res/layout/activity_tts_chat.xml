@@ -21,9 +21,8 @@
             android:id="@+id/tts_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:title="TTS Chat"
-            app:titleTextColor="@android:color/white">
+            android:background="?android:attr/colorPrimary"
+            app:title="TTS Chat">
             <!-- Add your settings ImageButton here if it's part of the Toolbar -->
             <ImageButton
                 android:id="@+id/settings_button"
@@ -62,7 +61,7 @@
         android:paddingEnd="8dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
-        android:background="?android:attr/windowBackground"
+        android:background="?android:attr/colorBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">

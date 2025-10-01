@@ -5,15 +5,18 @@
 
         <ListPreference
             app:key="selected_language_locale"
-            app:title="Default Language"/>
+            app:title="Default Language"
+            app:summary="%s"/>
 
         <ListPreference
             app:key="network_options"
-            app:title="Network Options"/>
+            app:title="Network Options"
+            app:summary="%s"/>
 
         <ListPreference
             app:key="selected_voice_id"
-            app:title="Default Voice"/>
+            app:title="Default Voice"
+            app:summary="%s"/>
 
         <androidx.preference.SeekBarPreference
             android:max="200"
@@ -36,8 +39,8 @@
         <SwitchPreferenceCompat
             app:key="dark_mode_enabled"
             app:title="Dark Mode"
-            app:summaryOn="Dark mode is active"
-            app:summaryOff="Light mode is active"
+            app:summaryOn="Light mode is active"
+            app:summaryOff="Dark mode is active"
             app:defaultValue="true" /> <!-- Or true, or based on system default -->
 
     </PreferenceCategory>

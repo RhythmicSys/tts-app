@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.simplexity.basictts"
-        minSdk = 24
+        minSdk = 34
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
