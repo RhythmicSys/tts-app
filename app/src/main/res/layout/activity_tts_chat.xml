@@ -34,8 +34,7 @@
                 android:contentDescription="settings button"
                 android:scaleX="1.5"
                 android:scaleY="1.5"
-                android:src="@drawable/round_settings_24"
-                app:tint="@color/material_dynamic_neutral_variant30" />
+                android:src="@drawable/settings_button"/>
         </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -70,7 +69,7 @@
 
         <EditText
             android:id="@+id/edit_tts_message"
-            android:layout_width="327dp"
+            android:layout_width="326dp"
             android:layout_height="58dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
@@ -84,13 +83,11 @@
 
         <ImageButton
             android:id="@+id/tts_send_button"
-            android:layout_width="78dp"
-            android:layout_height="56dp"
-            android:backgroundTint="@android:color/holo_blue_light"
+            android:layout_width="62dp"
+            android:layout_height="55dp"
+            android:background="@drawable/send_button"
             android:contentDescription="Send Message"
-            android:src="@drawable/send_icon"
-            app:tint="@color/material_dynamic_neutral10"
-             />
+            android:src="@drawable/send_icon" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

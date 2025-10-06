@@ -5,18 +5,20 @@
 
         <ListPreference
             app:key="selected_language_locale"
-            app:title="Default Language"
-            app:summary="%s"/>
-
-        <ListPreference
-            app:key="network_options"
-            app:title="Network Options"
-            app:summary="%s"/>
+            app:negativeButtonText="Back"
+            app:summary="%s"
+            app:title="Language"/>
 
         <ListPreference
             app:key="selected_voice_id"
-            app:title="Default Voice"
+            app:title="Voice"
             app:summary="%s"/>
+
+        <SwitchPreferenceCompat
+            app:key="include_cloud_voices"
+            app:title="Include Cloud Voices"
+            app:summaryOn="Cloud voices can be used"
+            app:summaryOff="Cloud voices not shown"/>
 
         <androidx.preference.SeekBarPreference
             android:max="200"

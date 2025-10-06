@@ -25,13 +25,12 @@ import java.util.Set;
 public class PreferenceHandler extends PreferenceFragmentCompat {
 
     private TextToSpeech textToSpeech;
-    private ListPreference languagePreference, voicePreference, networkPreference;
+    private ListPreference languagePreference, voicePreference;
     private SeekBarPreference pitchPreference, speedPreference;
-    private float defaultPitch, defaultSpeed;
     private Voice defaultVoice;
     private Button testButton;
-    private SwitchPreferenceCompat darkMode;
-    private final HashMap<String, Set<VoiceInfo>> languageVoices = new HashMap<>();
+    private SwitchPreferenceCompat darkMode, includeCloudVoices;
+    private final HashMap<String, Set<VoiceInfo>> availableVoices = new HashMap<>();
     private final HashMap<String, Locale> localeOptions = new HashMap<>();
 
     @Override
@@ -41,20 +40,10 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
 
         languagePreference = findPreference("selected_language_locale");
         voicePreference = findPreference("selected_voice_id");
-        networkPreference = findPreference("network_options");
         darkMode = findPreference("dark_mode_enabled");
         pitchPreference = findPreference("speech_pitch");
         speedPreference = findPreference("speech_speed");
-
-        if (voicePreference != null) {
-            voicePreference.setEnabled(true);
-        }
-        if (languagePreference != null) {
-            languagePreference.setEnabled(true);
-        }
-        if (networkPreference != null) {
-            networkPreference.setEnabled(false);
-        }
+        includeCloudVoices = findPreference("include_cloud_voices");
         setupListeners();
 
 
@@ -66,7 +55,7 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
                 Log.d("PreferenceHandler", "Language changed to: " + newValue);
                 if (newValue != null) {
                     Locale selected = Locale.forLanguageTag(newValue.toString());
-                    populateLanguageVoices(selected);
+                    populateAvailableVoices(selected);
                     voicePreference.setValue(voicePreference.getEntries()[0].toString());
                 }
                 return true;
@@ -78,9 +67,10 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
                 return true;
             });
         }
-        if (networkPreference != null) {
-            networkPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-                Log.d("PreferenceHandler", "Network changed to: " + newValue);
+        if (includeCloudVoices != null) {
+            includeCloudVoices.setOnPreferenceChangeListener((preference, newValue) -> {
+                populateAvailableVoices(Locale.forLanguageTag(languagePreference.getValue()));
+                Log.d("PreferenceHandler", "Cloud voices value changed to: " + newValue);
                 return true;
             });
         }
@@ -128,20 +118,20 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
                 continue;
             }
             Log.d("PreferenceHandler", "Locale: " + locale);
-            VoiceInfo voiceInfo = new VoiceInfo(voice.getName(), voice.getName(), locale,
+            VoiceInfo voiceInfo = new VoiceInfo(createHumanReadableName(voice), voice.getName(), locale,
                     voice.isNetworkConnectionRequired());
             Log.d("PreferenceHandler", "Voice: " + voiceInfo);
             Set<VoiceInfo> currentVoices;
-            if (languageVoices.containsKey(locale.toLanguageTag())) {
-                currentVoices = languageVoices.get(locale.toLanguageTag());
+            if (availableVoices.containsKey(locale.toLanguageTag())) {
+                currentVoices = availableVoices.get(locale.toLanguageTag());
             } else {
                 currentVoices = new HashSet<>();
             }
             currentVoices.add(voiceInfo);
-            languageVoices.put(locale.toLanguageTag(), currentVoices);
+            availableVoices.put(locale.toLanguageTag(), currentVoices);
         }
         Log.d("PreferenceHandler", "All voices loaded");
-        Log.d("PreferenceHandler", "Language voices: " + languageVoices);
+        Log.d("PreferenceHandler", "Language voices: " + availableVoices);
     }
 
     private void populateLocaleList() {
@@ -177,28 +167,32 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
             currentValue = fallback;
         }
         Log.d("PreferenceHandler", "Current value: " + currentValue);
-        populateLanguageVoices(Locale.forLanguageTag(currentValue));
+        populateAvailableVoices(Locale.forLanguageTag(currentValue));
         Log.d("PreferenceHandler", "Locale list populated");
     }
 
 
-    private void populateLanguageVoices(Locale locale) {
+    private void populateAvailableVoices(Locale locale) {
         if (locale == null) {
             Log.d("PreferenceHandler", "Locale is null");
             return;
         }
         Log.d("PreferenceHandler", "Locale: " + locale);
-        Set<VoiceInfo> voices = languageVoices.get(locale.toLanguageTag());
+        Set<VoiceInfo> voices = availableVoices.get(locale.toLanguageTag());
         Log.d("PreferenceHandler", "Voices: " + voices);
         Log.d("PreferenceHandler", "Voice preference: " + voicePreference);
-        Log.d("PreferenceHandler", "Language Voices: " + languageVoices);
+        Log.d("PreferenceHandler", "Language Voices: " + availableVoices);
         if (voices == null) {
             Log.d("PreferenceHandler", "No voices found for locale: " + locale);
             return;
         }
         Log.d("PreferenceHandler", "Voices found: " + voices);
         List<VoiceInfo> sortedVoices = new ArrayList<>(voices);
-        sortedVoices.sort(Comparator.comparing(VoiceInfo::getHumanReadableName, String.CASE_INSENSITIVE_ORDER));
+        if (!includeCloudVoices.isChecked()) {
+            sortedVoices.removeIf(VoiceInfo::isNetworkRequired);
+        }
+        sortedVoices.sort(Comparator.comparing(VoiceInfo::isNetworkRequired)
+                .thenComparing(VoiceInfo::getHumanReadableName, String.CASE_INSENSITIVE_ORDER));
 
         String[] entries = sortedVoices.stream()
                 .map(VoiceInfo::getHumanReadableName)
@@ -231,6 +225,25 @@ public class PreferenceHandler extends PreferenceFragmentCompat {
             }
         });
 
+    }
+
+    private String createHumanReadableName(Voice voice){
+        String name = voice.getName().toLowerCase();
+        Log.d("PreferenceHandler", "Voice name: " + name);
+        String localeName = voice.getLocale().toString().toLowerCase().replace("_", "-");
+        Log.d("PreferenceHandler", "Locale name: " + localeName);
+        name = name.replace(localeName, "");
+        Log.d("PreferenceHandler", "Name after removing locale: " + name);
+        name = name.replace("-x-", "");
+        Log.d("PreferenceHandler", "Name after removing -x-: " + name);
+        name = name.replace("-", " ");
+        Log.d("PreferenceHandler", "Name after removing -: " + name);
+        name = name.replace("network", " (Requires Wifi)");
+        Log.d("PreferenceHandler", "Name after removing network: " + name);
+        name = name.replace("local", " (Offline)");
+        Log.d("PreferenceHandler", "Name after removing local: " + name);
+        name = name.replace("language", "Default");
+        return name.trim();
     }
 
 }
